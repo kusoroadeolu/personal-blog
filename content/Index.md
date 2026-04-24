@@ -1,5 +1,5 @@
 # My Wiki
-Welcome to my personal blog/knowledge base. This contains everything I will write from full articles to rough sketches. Note that not everything written here will be complete
+Welcome to my personal blog/knowledge base. This contains everything I will write from full articles to rough sketches. Note that not everything written here will be completed content
 
 ## Topics
 - [[concurrency/VarHandle Memory Modes|VarHandle Memory Modes]]
