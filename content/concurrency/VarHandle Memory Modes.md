@@ -18,11 +18,11 @@ Per variable access with opaque mode are guaranteed certain traits. Given a vari
 
 2. Coherence: Threads must agree on a given linear ordering of accesses to that variable, basically you can't have a situation where it is ambiguous which write came first. This builds upon the previous point of acyclicity. Basically communication between threads using opaque mode access cannot form a cyclic dependence since a linear ordering is always agreed upon.
 
-This is upheld by two invariants:
-- Variable overwrite order is consistent with the read-by relation: In the linear ordering, a read of a write must come before an overwrite of that write 
-- Variable overwrite order is consistent with the from-read relation: An overwrite of a write must appear after a read that observed that write
-  i.e. Given a read **R1** observes a write **W1**, a write **W2** cannot be ordered before **W1** even though it might have occurred before **W1**.
-  So even if W2 occurred before W1 in time, as long as in the agreed upon ordering, **W1** comes before **W2**, 
+    This is upheld by two invariants:
+    - Variable overwrite order is consistent with the read-by relation: In the linear ordering, a read of a write must come before an overwrite of that write 
+    - Variable overwrite order is consistent with the from-read relation: An overwrite of a write must appear after a read that observed that write
+      i.e. Given a read **R1** observes a write **W1**, a write **W2** cannot be ordered before **W1** even though it might have occurred before **W1**.
+      So even if W2 occurred before W1 in time, as long as in the agreed upon ordering, **W1** comes before **W2**
 
 3. Bitwise Atomicity: Writes to long/double fields are written atomically. No word tearing can occur 
 
