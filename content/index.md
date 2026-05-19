@@ -1,3 +1,7 @@
+---
+title: ""
+---
+
 # My Blog
 Welcome to my personal blog/knowledge base. This contains everything I will write from full articles to rough sketches. Note that not everything written here will be completed content
 
