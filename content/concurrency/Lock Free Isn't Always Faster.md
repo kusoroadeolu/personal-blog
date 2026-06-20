@@ -27,10 +27,10 @@ These experiments were performed on a keyspace of 10_000 integers generated at r
 
 ## Benchmark results
 ### Write Heavy
-![Write Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=2083525584&format=image)
+![Write Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=1729214476&format=image)
 
 ### Read Heavy
-![Read Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=1477816088&format=image)
+![Read Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=2083678510&format=image)
 
 From these results, we can see the unrolled list's thrpt surpasses that of the lock free list by almost 50x for the write heavy workload and 80x for the read heavy workload, even though the lock free list explicitly avoids locks and provides lock free guarantees on the write and read path while the unrolled list uses a fine grained blocking approach. This shows that designing data structures with hardware in mind offers better performance than just designing data structures with progress guarantees in mind.
 
