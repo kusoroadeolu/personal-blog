@@ -2,8 +2,8 @@
 A term used to coin four C's when it comes to memory ordering in concurrent based systems. 
 1. Causality - a principle that one event, process or state(the cause) directly influences and produces another (the effect)
 2. Coherence - a principle that implies given multiple actors writing/reading to shared state, they always agree on a shared order of writes
-3. Commutativity - Denotes that the result of an operation always remains the same regardless of what order it is performed in. Reminds me of _Sequential Consistency_ of multi core systems
-4. Consensus - a principle where multiple nodes agree on a single data value/state, even if some nodes fail
+3. Commutativity - Denotes that the result of an operation always remains the same regardless of what order it is performed in. 
+4. Consensus - a principle where multiple actors agree on a single data value/state, even if some actors fail
 
 
 # Java memory modes cheat sheet
@@ -37,23 +37,26 @@ Note that these guarantees can only be upheld if both accesses are opaque(or str
 ## Release/Acquire
 ### Guarantees
 1. If a write A comes before interthread **Release** mode write W in source program order, then write A comes before write W in local program order
+
 2. If interthread **Acquire** mode read R comes before read B in source program order, then read R comes before read B in local program order
 
-____
 Usages can be thought of in terms of 
 1. Ownership i.e. a thread making a constructed object available/visible to other threads to use
 2. Ownership transfer i.e. a thread transfers ownership of an object it will not use again to another thread
 
 ### Fences
-A `VarHandle#releaseFence()` ensures all non-local writes/reads complete before the fence
-A `VarHandle#acquireFence()` ensures all non-local reads complete before the fence and invalidates reads after the fence i.e. if an acquireFence separates two reads, the second read cannot reuse an old value it saw before the fence 
+A `VarHandle#releaseFence()` ensures all non-local writes/reads complete before the 
+
+A `VarHandle#acquireFence()` ensures all non-local reads complete before the fence and invalidates reads after the fence. Also, if an acquireFence separates two reads, the second read cannot reuse an old value it saw before the fence 
 
 ### Caveats
 - A release write does not guarantee ordering of any writes after it
 
 
 ## Volatile
-The default ordering mode for `Varhandle`. When all accesses in local program order use volatile memory ordering, then all accesses are sequentially consistent i.e. Local program order must respect memory ordering
+The default ordering mode for `Varhandle`. When all accesses in local program order use volatile memory ordering, then all accesses are sequentially consistent 
+
+i.e. Global ordering must respect local ordering
 
 | Thread A   | Thread B   |
 |------------|------------|
@@ -62,17 +65,43 @@ The default ordering mode for `Varhandle`. When all accesses in local program or
  Across all possible sequential reorderings, x or y can be 1 but both cannot be 1
 
 
+
+
+## Current Notes on ordering guarantees for all modes
+1. Plain mode: Can be reordered freely by the CPU or compiler only if those reorderings respect commutativity. However plain accesses can still be optimized in subtle ways by the JIT, CPU or compiler
+
+2. Opaque mode: simply adds bitwise atomicity, acylicity and coherence to an independent variable, can be reordered relative to other variables but is coherent with itself during inter thread reads/writes
+
+3. Release / Acquire mode: Adds ordering constraints on top of opaque mode. 
+- Release mode: if x precedes a release access y in global order then x precedes y in local program order.
+They cannot be reordered with any read/write that precede it in program order
+
+- Acquire mode: if acquire access x precedes y in global order then x precedes y in local program order. They cannot be reordered with any read/write that follows it in program order
+
+Note that:
+- A later write/read can be reordered to occur before a release access.
+- A preceding write/read can be reordered to occur before an acquire read
+
+4. Volatile mode: Adds ordering constraints on top of release mode. When all accesses use volatile mode, the inter thread order is said to be sequentially consistent
+
+Volatile accesses ensure total ordering of accesses the have `synchronizes with` relations with the volatile access. 
+
+Note that:
+- From the last jcstress example under the advanced section which showed volatile accesses are not fences. It is a bit confusing since it shows an access which occurs after a volatile write and read in sepearate threads without a `synchronizes with` relation getting reordered to occur before the volatile write and read.
+
 ### Fences
-A `VarHandle#FullFence` ensures access before and after the fences cannot be reordered with each other
+Memory accesses provide consistency guarantees for the memory accesses they synchronize (or form partial orders) with. This means variables they don't synchronize with are free to be reordered by the CPU, however, fences provide these consistency guarantees for memory acccesses across the program
+
+
+A `VarHandle#FullFence` ensures memory accesses before and after the fences cannot be reordered with each other
 
 
 Trailing fence convention ensures full fences between methods who do not know anything about each other are not redundant
 ```
-releaseFence()    // drain earlier accesses before write
+releaseFence()    // ensure earlier accesses finish
 x = v            // write
 fullFence()       // make write visible + serve as leading fence for next access
 
 v = x            // read (sees latest value because of the above fullFence)
 fullFence()       // serve as leading fence for whatever comes after this read
 ```
-

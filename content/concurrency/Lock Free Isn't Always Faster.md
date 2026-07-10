@@ -1,17 +1,18 @@
 # Lock Free Isn't always faster
-There's a popular misconception that lock free data structures are always faster. However, lock free data structures (even if correct) can be handle less operations per microsecond compared to a lock-based structure that sympathises with modern computer hardware or more commonly known as **mechanical sympathy** by Martin Thompson.
+There's a popular misconception that locks are slow. This misconception is usually caused by people using locks in ways where the cost of acquiring the lock is usually much more expensive than the actual work being done in the critical section. Usually this isn't really a problem, a simple way to fix this would be to use a lightweight lock like a simple spinlock, unlike the Reentrant lock provided in the JDK which is pretty much heavy machinery. Another factor which contributes to this misconception is `lock contention`. This is where a lock being placed in a highly contended critical section which massively degrades throughput. Usually and unapollogetically, this conclusions are supported by profile data and benchmarks
 
-To demonstrate this fact, I'll use 2 concurrent lists I made. A lock free linked list and an unrolled concurrent list.
+Alas, there's a group of datastructures which are usually termed `lock free` which provide non blocking progress guarantees and are usually coined to be faster compared to lock based structures. Alas, using locks to protect datastructures is much easier and usually the right choice earlier on as lock free data structures are notoriously harder to get right. I've have faced cases and seen multiple people face cases in which these lock free datastructures look and work correctly at the moment under rigorous stress tests, only for a race condition to show up months later in production.
 
-The unrolled list provides a significant advantage over the lock free linked list. While the lock free linked list suffers from pointer chasing (a common issue with linked lists/queues).The unrolled list, which still uses a linked structure, however:
+However, lock free data structures (even if correct) can be magnitudes of seconds slower compared to a lock-based structure that sympathises with modern computer hardware or more commonly known as **mechanical sympathy** by Martin Thompson.
 
-1. Stores data in batches (arrays) to reduce the number of nodes a thread needs to hop to find a value 
+To demonstrate this fact, I'll use 2 concurrent ordered lists I made. A lock free linked list and a lock based unrolled concurrent list. These lists support three main functions `add`, `remove` and `contains`
 
-2. More importantly, adheres to the principle of spatial locality; a principle in computer architecture which if a core accesses a memory location, it is highly likely to access nearby memory locations. 
+The unrolled list provides a significant advantage over the lock free linked list. While the lock free linked list suffers from pointer chasing (a common issue with linked datastructures).The unrolled list, which still uses a linked structure, however it stores data in memory in continguous blocks (arrays) to reduce the number of nodes a thread needs to hop to find a value. This adheres to the principle of spatial locality; a principle in computer architecture which if a core accesses a memory location, it is highly likely to access nearby memory locations. 
 
-If you recall, from my Cache Coherence article, memory systems access data in 64 byte cache lines and arrays are contingously arranged, so when data from an array is fetched, the cpu assumes surrounding data will be needed, hence all the needed data in the array is already in the CPU's L1 or L2 cache, which is much faster than accessing main memory.
+If you recall, from my Cache Coherence article, most modern memory systems access data in 64 byte cache lines and arrays are contingously arranged, so when data from an array is fetched, the cpu assumes surrounding data will be needed, hence all the needed data in the array is already in the CPU's L1 or L2 cache, which is much faster than accessing main memory.
 
-Anyways, enough talking, let's get into the graphs lol
+
+To put things into context, I've created a benchmark which measures the throughput of these structures under two workloads: a write heavy workload and a read heavy workload
 
 ## Benchmark Setup
 - JMH version: 1.37
@@ -34,8 +35,7 @@ These experiments were performed on a keyspace of 10_000 integers generated at r
 
 From these results, we can see the unrolled list's thrpt surpasses that of the lock free list by almost 50x for the write heavy workload and 80x for the read heavy workload, even though the lock free list explicitly avoids locks and provides lock free guarantees on the write and read path while the unrolled list uses a fine grained blocking approach. This shows that designing data structures with hardware in mind offers better performance than just designing data structures with progress guarantees in mind.
 
-So yeah this was just a little experiment on my part and I am excited to build more concurrent data structures with hardware architecture in mind
-
+So yeah this was just a little experiment on my part. However 
 As always the source code for these structures can be found on my github.
 
 **Github**: https://github.com/kusoroadeolu/concurrent-lists
