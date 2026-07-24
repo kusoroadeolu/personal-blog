@@ -17,7 +17,7 @@ which in turn could become a bottleneck later down the line.
 
 This ruled out any concurrency control technique in which all threads had to come to consensus on the size of the queue through a shared counter. For example, per node fine-grained locking or segmentation, where both insert and delete operations need a serialized view of the size of the queue before proceeding.
 
-Eventually I landed on what I believed was a simple way to enforce boundedness though, it had a major flaw I didn't realize at the moment
+Eventually I landed on what I believed was a simple way to enforce boundedness. It had a major flaw I didn't realize at the moment, though.
 
 ### Dual arrays
 
@@ -39,12 +39,12 @@ Boundedness is preserved by summing the count of the current values in the inser
 
 This design had a major flaw that contradicted my initial goals
 
-The major flaw is that merge operations are a single serialization point for both insert and delete operations. Since the sort in merge operations are unbounded, the duration for a sort scales with the size of the array; meaning if the array is pretty large, a "slow" thread, in practice could stall other threads for an indefinite amount of time with the upper bound being the actual capacity of the array which could cause unpredictable tail latencies under contention.
+Merge operations are a serialization point for both insert and delete operations. Since the sort in merge operations are unbounded, the duration for a sort scales with the size of the array; meaning if the array is pretty large, a "slow" thread, in practice could stall other threads for an indefinite amount of time with the upper bound being the actual capacity of the array which could cause unpredictable tail latencies under contention.
 
 This problem gets worse under bursty high priority insert traffic, where each such insert could trigger another merge before the previous one's cost has even been amortized.
 
 To tackle the problem of unbounded sorts, I decided to move some complexity to the insert side by ensuring inserts maintain priority order, through a serialized sequential priority queue, removing the need for unbounded sorting during merges. 
-To make merge occurrences predictable, I removed the logic that triggered a merge whenever an incoming element had greater priority the lowest priority item in the delete array.
+To make merge occurrences predictable, I removed the logic that triggered a merge whenever an incoming element had greater priority than the lowest priority item in the delete array.
 
 By ensuring inserts maintain priority ordering, merges are considerably shorter as all that is required is to remove the top N priority elements from the serialized sequential priority queue, however a "slow" thread could still stall other threads for a substantial amount of time.
 
@@ -62,7 +62,7 @@ Since elements arrive in FIFO order, we need some way to ensure priority orderin
 
 A new generation begins once a previous generation has been sorted OR the range of a generation has exceeded a given segment limit. Also, generations are logical, in the sense that there is no actual physical mechanism to track generations rather they are used to ensure the **priority** semantics of the queue
 
-To guard against false sharing, I added manual cache line padding to the generational queues, separating fields that are updated independently by different threads (i.e. producer/consumer indices, sort buffers etc.) onto their own cache lines. I didn't bother with this in the dual-array structures tbh.
+To guard against false sharing, I added manual cache line padding to the generational queues, separating fields that are updated independently by different threads (e.g. producer/consumer indices, sort buffers, status flags etc.) onto their own cache lines. I didn't bother with this in the dual-array structures tbh. The cost of this however, is a larger memory footprint, which might not be suitable depending on a system's constraints.
 
 ![Generation Array](images/generation-array.png)
 
