@@ -50,7 +50,7 @@ By ensuring inserts maintain priority ordering, merges are considerably shorter 
 
 ### A simpler redesign
 
-So far, I decided to rethink some choices since the dual array approach wasn't cutting it. The major goal of this redesign was figuring out how to decouple the merge operation from the insert path while also simultaneously keeping it amortizing its cost on the delete path.
+Even with a bounded sort, a slow thread could still stall every other thread during a merge; the dual array approach wasn't cutting it. This redesign's goal was to decouple merge entirely from the insert path, while still amortizing its cost on the delete path.
 
 To solve this, I settled on a design that repurposes a well studied data structure: A concurrent FIFO Queue.
 
@@ -70,7 +70,7 @@ To guard against false sharing, I added manual cache line padding to the generat
 
 To make things more concrete, I prepared a micro benchmark using JMH. This benchmark compares 4 priority queues I cooked up. 
 Two from the dual array family: `LBPQ and OBQ` and two from the generation priority queue family: `PADDED-GEN and MPMC-GEN`. 
-These are benchmarked against a serialized fixed capacity sequential priority queue (JDKs) baseline.
+These are benchmarked against a serialized fixed capacity sequential priority queue (JDK's implementaion) baseline `LOCK`.
 
 - JMH version: 1.37
 - Warmup: 10 iterations, 1 s each
