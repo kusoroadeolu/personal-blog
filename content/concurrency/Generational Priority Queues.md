@@ -17,7 +17,7 @@ which in turn could become a bottleneck later down the line.
 
 This ruled out any concurrency control technique in which all threads had to come to consensus on the size of the queue through a shared counter. For example, per node fine-grained locking or segmentation, where both insert and delete operations need a serialized view of the size of the queue before proceeding.
 
-Eventually I landed on what I believed was a simple way to enforce boundedness though, it had some fatal flaws I didn't realize at the moment
+Eventually I landed on what I believed was a simple way to enforce boundedness though, it had a major flaw I didn't realize at the moment
 
 ### Dual arrays
 
@@ -61,6 +61,8 @@ Elements in earlier generations are guaranteed to have arrived before elements i
 Since elements arrive in FIFO order, we need some way to ensure priority ordering, in a generation. This is achieved during a segment/generation sort. This sort operation is similar to merge operations in the dual array queues, however these sorts are completely decoupled from inserts and don't stall concurrent inserts, however, deletes are stalled during this sort. To address the issue of a "slow" thread performing a segment sort, the number of elements being sorted are bound to the range of the generation to ensure the time taken to perform this sort doesn't scale with the capacity of the array.
 
 A new generation begins once a previous generation has been sorted OR the range of a generation has exceeded a given segment limit. Also, generations are logical, in the sense that there is no actual physical mechanism to track generations rather they are used to ensure the **priority** semantics of the queue
+
+To guard against false sharing, I added manual cache line padding to the generational queues, separating fields that are updated independently by different threads (i.e. producer/consumer indices, sort buffers etc.) onto their own cache lines. I didn't bother with this in the dual-array structures tbh.
 
 ![Generation Array](images/generation-array.png)
 
