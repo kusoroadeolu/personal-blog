@@ -136,7 +136,7 @@ I decided to run some benchmarks using JMH on this implementation against a trei
 - Measurement: 10 iterations × 1s each
 - Forks: 3
 - Thread configuration: 2 , 4, 8
-- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 8 cores
+- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 4 cores, 8 processors
 
 ### Results
 

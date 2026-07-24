@@ -13,7 +13,7 @@ You can visit the [GitHub repository](https://github.com/kusoroadeolu/tx-map/tre
 - Measurement: 5 iterations × 1s each
 - Forks: 2
 - Thread configuration: 1, 2 , 4, 8 (Platform threads)
-- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 8 cores
+- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 4 cores, 8 processors
 
 ## The Journey
 Initially my MVCC txMap had good read numbers for thrpt and decent write numbers, though the error margins for the write numbers were bad, so I decided to investigate. While investigating, I encountered an issue. Also, just a quick note before we continue that `ActiveTransactions` just keeps tab on all active transactions at the moment.

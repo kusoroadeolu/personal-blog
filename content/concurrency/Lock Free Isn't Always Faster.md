@@ -21,7 +21,7 @@ To put things into context, I've created a benchmark which measures the throughp
 - Measurement: 10 iterations × 1s each
 - Forks: 3
 - Thread configuration: 8
-- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 8 cores
+- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 4 cores, 8 processors
 
 These experiments were performed on a keyspace of 10_000 integers generated at random with read workloads of ratio 90% contains, 9% adds and 1% removes and write workloads of 50% adds, 40% removes and 10% contain ops.
 
@@ -32,7 +32,7 @@ These experiments were performed on a keyspace of 10_000 integers generated at r
 ### Read Heavy
 ![Read Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=2083678510&format=image)
 
-From these results, we can see the unrolled list's thrpt surpasses that of the lock free list by almost 50x for the write heavy workload and 80x for the read heavy workload, even though the lock free list explicitly avoids locks and provides lock free guarantees on the write and read path while the unrolled list uses a fine grained blocking approach. This shows that designing data structures with hardware in mind offers better performance than just designing data structures with progress guarantees in mind.
+From these results, we can see the unrolled list's thrpt surpasses that of the lock free list by almost 50x for the write heavy workload and 80x for the read heavy workload, even though the lock free list explicitly avoids locks and provides lock free guarantees on the write and read path while the unrolled list uses a fine-grained locking approach. This shows that designing data structures with hardware in mind offers better performance than just designing data structures with progress guarantees in mind.
 
 So yeah this was just a little experiment on my part. However 
 As always the source code for these structures can be found on my github.

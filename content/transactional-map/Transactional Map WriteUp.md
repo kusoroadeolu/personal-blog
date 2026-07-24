@@ -83,6 +83,7 @@ From these numbers we can see that no single implementation wins across all work
 ### Flat Combining
 Looking back at the flat combining numbers even though both have terrible variance for both read/write heavy workloads, I do want to offer what I plan to do to improve them.
 1. Experimenting with multiple idle strategies. Right now, both implementations while idle, spin for **n** number of times, before rechecking their results and potentially trying to become the combiner, this could lead to wasted work as their results could be ready much earlier or the combiner might have forfeited its status earlier as well. Two other strategies I'd implement and benchmark against are
+
 - **Plain Busy Waiting:** Threads just spin on their results continuously without spinning **n** number of times before checking their results or trying to acquire the lock. Though constant CAS `tryLock()` failures could in the unbound combiner could ideally make throughput and its variance worse than just using a global lock
 - **Timed Parks:** This involves threads parking for a fixed amount of time before rechecking their result, though OS context switches might actually become a bottleneck here.
 
