@@ -133,7 +133,7 @@ The caveats on what these numbers do and don't tell you:
 - These benchmarks were run in JMH sampling mode, with little regard for thrpt
 so the numbers might be vastly different there.
 - Correctness was stress tested with JCStress, but the workloads were fairly uniform. No adversarial cases (all-same-priority inserts, monotonic priority bursts), so the "slow thread" story is characterized under normal contention, not worst case.
-- OBQ's flat tail surprised me enough that I reran the benchmark before trusting it. Putting that here because it's honestly worth being skeptical about
+- OBQ's flat tail surprised me enough that I reran the benchmark before trusting it. Im putting that here because it's honestly something I'm surprised by
 
 ## Conclusion
 That said, there's still room for improvement; maybe I missed something, or there's a better way of doing something I already did.
