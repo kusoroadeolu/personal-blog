@@ -113,14 +113,38 @@ This pushes tail latency out much earlier as 2048 begins degrading right at p99,
 
 *(Note: p1.00 was excluded from this chart as values converged across all segment limits.)*
 
-## Final Thoughts
-The generational redesign achieved my core goals.
+## So What Now?
 
+The generational redesign achieved my core goals, but here's what I think is actually useful for anyone else attempting something similar:
+
+- If you need boundedness and decoupled producer/consumer paths, rule out any technique requiring a shared counter or serialized size check up front, per-node locking and segmentation both die on this constraint immediately. Saves you the trip I took through the dual-array design.
+- The real enemy isn't the merge/sync point itself, it's an unbounded sort at that point. Bound the sort size (not the array size) and your tail latency stops scaling with capacity; this was the one of my major fixex, everything else was scaffolding toward it.
+- Pushing ordering work to the insert side (like OBQ does) trades insert cost for delete-min cost. If your workload leans read/delete-heavy, this trade is worth it even when it looks worse on paper for average throughput.
+- Segment limit is the knob that actually matters in the generational design. Small segments are more frequent but have cheaper sorts hence a flat tail. Large segments are rare but have expensive sorts which causes that tail cliff. There's a knee somewhere around 512–2048 that's worth benchmarking on your machine before you pick a default tbh.
+
+Whether this helps anyone else building one of these, or just answers a question I had, I'm not sure; but if you've built something similar or think I got a step wrong, I'd like to hear it.
+
+## Notes
+
+The caveats on what these numbers do and don't tell you:
+
+- These benchmarks were run on a single machine(held together by hopes and dreamns), single CPU (i5-10300H, 4c/8t). No data on how this holds up past 8 threads, or on NUMA/many-core setups.
+- Fixed capacity of 65536 throughout. I didn't test very small or very large bounds, so I can't say the tail behavior generalizes.
+- These benchmarks were run in JMH sampling mode, with little regard for thrpt
+so the numbers might be vastly different there.
+- Correctness was stress tested with JCStress, but the workloads were fairly uniform. No adversarial cases (all-same-priority inserts, monotonic priority bursts), so the "slow thread" story is characterized under normal contention, not worst case.
+- OBQ's flat tail surprised me enough that I reran the benchmark before trusting it. Putting that here because it's honestly worth being skeptical about
+
+## Conclusion
 That said, there's still room for improvement; maybe I missed something, or there's a better way of doing something I already did.
 
 The dual array priority queues are inspired by the CBPQ paper. The base queue for my generational priority queue is inspired by the MPSC and MPMC FIFO queues from JCTools. All implementations were stress tested with JCStress.
 
 Source code and prior notes are available on my GitHub repo: https://github.com/kusoroadeolu/cleap
+
+---
+Something I'm also curious about is how much you can realistically relax the invariants of a structure before it is incorrect or basically another structure.
+I wonder if there's a some research on that
 
 ## Papers & References I found useful
 - [CBPQ](https://csaws.cs.technion.ac.il/~erez/Papers/cbpq-europar2016.pdf)
@@ -130,5 +154,3 @@ Source code and prior notes are available on my GitHub repo: https://github.com/
 - [JCtools](https://github.com/JCTools/)
 - [Memory Bounds](https://arxiv.org/pdf/2104.15003)
 
-Something I'm also curious about is how much you can realistically relax the invariants of a structure before it is incorrect or basically another structure.
-I wonder if there's a some research on that
