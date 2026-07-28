@@ -1,40 +1,63 @@
-# Lock Free Isn't always faster
-There's a popular misconception that locks are slow. This misconception is usually caused by people using locks in ways where the cost of acquiring the lock is usually much more expensive than the actual work being done in the critical section. The major factor however which contributes to this misconception is `lock contention`; a performance bottleneck which occurs when multiple threads compete to access a locked resource. Unapollogetically, this conclusions are supported by profile data and benchmarks
+# Lock-Free Isn't Always Faster
 
-Alas, there's a group of concurrent constructs which are usually termed `lock free` which provide non blocking progress guarantees allowing at least one thread to make progress at a time. They are usually coined to be faster compared to lock based structures. However, using locks to protect datastructures is much easier and usually the right choice earlier on as lock free data structures are notoriously harder to get right. There are multiple cases in which these lock free datastructures look and work correctly at the moment under rigorous stress tests, only for a race condition to show up months later in production. 
+Lock-free data structures are supposed to be the fast option. No blocking, no threads waiting on each other, no lock contention grinding things to a halt. So when I benchmarked a lock-free linked list against a lock-based structure, I expected the lock-free one to win.
 
-However, lock free data structures (even if correct) can be magnitudes of seconds slower compared to a lock-based structure; usually one that sympathises with modern computer hardware or more commonly known as **mechanical sympathy** by Martin Thompson.
+It didn't. It lost by up to 80x.
 
-To demonstrate this fact, I'll use 2 concurrent ordered lists I made which uphold the set invariant. A lock free linked list and a lock based unrolled concurrent list. These lists support three main functions `add`, `remove` and `contains`
+## Wait, aren't locks the slow ones?
 
-The unrolled list provides a significant advantage over the lock free linked list. While the lock free linked list suffers from pointer chasing (a common issue with linked datastructures).The unrolled list, which still uses a linked structure, however it stores data in memory in continguous blocks (arrays) to reduce the number of nodes a thread needs to hop to find a value. This adheres to the principle of spatial locality; a principle in computer architecture which if a core accesses a memory location, it is highly likely to access nearby memory locations. 
+That's the assumption baked into most concurrency advice: locks are slow, avoid them if you can. And it's not entirely wrong  but it's usually a misdiagnosis. The thing that actually kills performance isn't the lock itself, it's `lock contention`: multiple threads piling up to fight over the same locked resource. If your critical section is tiny and the lock acquisition costs more than the work being protected, sure, locks look slow. But that's a symptom of bad lock usage, not proof that locks are inherently slow. Profiling and benchmark data back this up consistently.
 
-If you recall, from my Cache Coherence article, most modern memory systems access data in contiguous 64 byte cache lines. Arrays arrange their elements are in such manner, so when data from an array is fetched, the CPU assumes surrounding data will be needed, hence all or most of the data in the array is already in the CPU's L1 or L2 cache, which can be accessed faster by the CPU compared to main memory
+Enter `lock-free` data structures. These are structures that guarantee at least one thread always makes progress, no blocking involved. On paper, they sound like the obvious upgrade. In practice, they're notoriously hard to get right. It's common to see a lock-free structure pass rigorous stress tests, ship to production, and then have a race condition surface months later that nobody caught. Locks, by comparison, are just easier to reason about, which is why they're usually the right default early on.
 
-To put things into context, I've created a benchmark which measures the throughput of these structures under two workloads: a write heavy workload and a read heavy workload
+Here's the part that surprised me though: even when a lock-free structure *is* correct, it can still be dramatically slower than a well-designed lock-based one. So I built two structures to find out why.
 
-## Benchmark Setup
-- JMH version: 1.37
-- JVM: Java 25, HotSpot 64-Bit Server VM (25+37-LTS-3491)
-- Benchmark mode: Throughput (ops/s)
-- Warmup: 10 iterations × 1s each
-- Measurement: 10 iterations × 1s each
+## The setup
+
+Two concurrent ordered lists, both upholding the set invariant, both supporting `add`, `remove`, and `contains`:
+
+- A **lock-free linked list**
+- A **lock-based unrolled list** (still a linked structure, but each node holds a contiguous array of elements instead of a single value)
+
+If lock-free avoids locking overhead entirely, how does a structure that *still uses locks* end up faster by a wide margin? The answer has almost nothing to do with locking at all.
+
+### How your CPU actually fetches memory
+
+The lock-free linked list suffers from pointer chasing. This is a classic problem with linked structures, where finding a value means hopping from node to node, each one potentially scattered somewhere different in memory.
+
+The unrolled list sidesteps this. Because it stores elements in contiguous arrays, it leans on **spatial locality**; the principle that if a CPU core accesses one memory location, it's very likely to access nearby locations next. Modern memory systems fetch data in 64-byte cache lines, and arrays are laid out exactly to exploit that: when the CPU pulls one element from an array, it usually pulls the neighboring elements too, straight into L1 or L2 cache. Cache access is fast. Main memory access is not. (I go deeper on this in my Cache Coherence article)
+
+This is the idea Martin Thompson calls **mechanical sympathy**; designing software that works with the hardware's grain instead of against it.
+
+Back to the benchmark, just to make things concrete
+
+## Benchmark setup
+
+- Mode: Throughput (ops/s)
+- Warmup: 10 iterations × 1s
+- Measurement: 10 iterations × 1s
 - Forks: 3
-- Thread configuration: 8
-- CPU Specs: Intel(R) Core(TM) i5-10300H CPU @ 2.50GHz (2.50 GHz), 4 cores, 8 processors
+- Threads: 8
+- CPU: Intel(R) Core(TM) i5-10300H @ 2.50GHz, 4 cores, 8 processors
 
-These experiments were performed on a keyspace of 10_000 integers generated at random with read workloads of ratio 90% contains, 9% adds and 1% removes and write workloads of 50% adds, 40% removes and 10% contain ops.
+Keyspace: 1_000_000 random integers. Two workloads:
+- **Read-heavy**: 90% contains, 9% adds, 1% removes
+- **Write-heavy**: 50% adds, 40% removes, 10% contains
 
-## Benchmark results
+## What do the numbers say?
+
 ### Write Heavy
 ![Write Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=1729214476&format=image)
 
 ### Read Heavy
 ![Read Heavy Chart](https://docs.google.com/spreadsheets/d/e/2PACX-1vTvl_TCJug-pfYqm8BALLomB7GZWus5U3q9pGHrqS5V7AXudMLME796garFMhenHvp_iaVYwUtXuyWH/pubchart?oid=2083678510&format=image)
 
-From these results, we can see the unrolled list's thrpt surpasses that of the lock free list by almost 50x for the write heavy workload and 80x for the read heavy workload, even though the lock free list explicitly avoids locks and provides lock free guarantees on the write and read path while the unrolled list uses a fine-grained locking approach. This shows that designing data structures with hardware in mind offers better performance than just designing data structures with progress guarantees in mind.
+The unrolled list beat the lock-free list by roughly **50x** on the write-heavy workload and **80x** on the read-heavy one. Despite the lock-free list offering non-blocking guarantees on every path, and the unrolled list relying on plain fine-grained locking.
 
-So yeah this was just a little experiment on my part. However 
-As always the source code for these structures can be found on my github.
+This shows that progress guarantees don't automatically guarantee performace. However, designing with respect to modern hardware does.
 
-**Github**: https://github.com/kusoroadeolu/concurrent-lists
+## Conclusions
+
+"Lock-free" and "fast" aren't the same thing. A structure can give you perfect non-blocking guarantees and still lose badly to a lock-based structure that simply respects how the CPU fetches memory. If you're chasing performance, designing around modern hardware will often get you further than designing around avoiding locks.
+
+Source code for both structures is on my GitHub: https://github.com/kusoroadeolu/concurrent-lists
