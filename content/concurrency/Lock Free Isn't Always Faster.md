@@ -4,7 +4,7 @@ Lock-free data structures are supposed to be the fast option. No blocking, no th
 
 It didn't. It lost by up to 80x.
 
-## Wait, aren't locks the slow ones?
+## Wait, aren't locks slow?
 
 That's the assumption baked into most concurrency advice: locks are slow, avoid them if you can. And it's not entirely wrong  but it's usually a misdiagnosis. The thing that actually kills performance isn't the lock itself, it's `lock contention`: multiple threads piling up to fight over the same locked resource. If your critical section is tiny and the lock acquisition costs more than the work being protected, sure, locks look slow. But that's a symptom of bad lock usage, not proof that locks are inherently slow. Profiling and benchmark data back this up consistently.
 
@@ -32,7 +32,6 @@ This is the idea Martin Thompson calls **mechanical sympathy**; designing softwa
 Back to the benchmark, just to make things concrete
 
 ## Benchmark setup
-
 - Mode: Throughput (ops/s)
 - Warmup: 10 iterations × 1s
 - Measurement: 10 iterations × 1s
