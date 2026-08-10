@@ -140,7 +140,7 @@ This tests succeeds on both x86_64 and ARM systems. Actor Y extends this causal 
 
 2. The acquire from actor Y *synchronizes-with* actor X's release to create a **happens-before** relationship between both accesses, so (X happens-before Y) 
 
-3. The release access in actor Y ensures that all writes that precede the release in global order are propagated to other threads who acquire on that release. 
+3. The release access in actor Y ensures that all writes observed by Y that precede the release are made visible to other threads who acquire on that release. 
 
 4. If the acquire from actor Z *synchronizes-with* actor Y's release, it will create a **happens-before** relationship between both accesses, so (Y happens-before Z). Since **happens-before** relationships are transitive, X **happens-before** Y and Y **happens-before** Z, therefore X **happens-before** Z, so Z will be able to observe the write to `dinner` from actor X with a plain memory access.
 
