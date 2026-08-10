@@ -14,5 +14,6 @@ Welcome to my personal blog/knowledge base. This contains everything I will writ
 - [[transactional-map/Transactional Map WriteUp]]
 - [[concurrency/Lock Free Isn't Always Faster]]
 - [[concurrency/Generational Priority Queues]]
+- [[concurrency/Causality|Extending Causal Chains With Release/Acquire]]
 
 
