@@ -57,7 +57,7 @@ Causal relationships can also be extended to form causal chains; a scenario wher
 For example turning on a light switch turns on a light bulb which in illuminates the room. The effect extends the causal chain to produce a new effect
 
 ### A bit more on causality
-Causality is the underlying principle of causal relationships. It is a an ordering between two events in which one event precedes another event if for every observer it will always appear that event precedes the other
+Causality is the underlying principle of causal relationships. It is a an ordering between two events in which one event precedes another event, if for every observer it will always appear that event preceded the other
 
 From my previous example, any one who observed the light bulb turning on will know turning on the light switch preceded the light bulb turning on 
 
@@ -96,18 +96,18 @@ To answer this question, I decided to come up with a stress test that's pretty e
 public class ExtendingCausalityStress {
 
     private int dinner;
-    private int desert;
+    private int dessert;
     private AtomicInteger ready;
 
     public ExtendingCausalityStress() {
          dinner = 0;
-         desert = 0;
+         dessert = 0;
         ready = new AtomicInteger(0);
     }
 
     /*
     * 1 - dinner 
-    * 2 - dinner and desert
+    * 2 - dinner and dessert
     * */
     @Actor
     public void actorX() {
@@ -118,15 +118,15 @@ public class ExtendingCausalityStress {
     @Actor
     public void actorY() {
         while (ready.getAcquire() == 0) Thread.onSpinWait(); //extends the causal chain
-        desert = 2;
-        ready.setRelease(desert); //extends the causal chain
+        dessert = 2;
+        ready.setRelease(dessert); //extends the causal chain
     }
 
     @Actor
     public void actorZ(I_Result i) {
-        int r = ready.getAcquire(); //observe the causal chain, we should see the write to both dinner and desert, most importantly, dinner
+        int r = ready.getAcquire(); //observe the causal chain, we should see the write to both dinner and dessert, most importantly, dinner
         if (r == 2) { //causal chain wasn't extended
-            if (dinner == 1 && desert == 2) i.r1 = 2;
+            if (dinner == 1 && dessert == 2) i.r1 = 2;
             else i.r1 = 0;
 
         } else i.r1 = 1;
@@ -143,7 +143,6 @@ This tests succeeds on both x86_64 and ARM systems. Actor Y extends this causal 
 3. The release access in actor Y ensures that all writes that precede the release in global order are propagated to other threads who acquire on that release. 
 
 4. The acquire from actor Z *synchronizes-with* actor Y's release to create a **happens-before** relationship between both accesses, so (Y happens-before Z). Hence, since **happens-before** relationships are transitive, X happens-before Z, so Z will see the plain write from actor X.
-
 
 
 This kind of thinking also extends to the treiber stack push/pop methods or structures where different threads create a *synchronizes-with* relation with the last release/volatile write on a shared object, from a thread which performed the same action leading to a transitive chain of **happens-before** relationships, therefore allowing a later thread who *synchronizes-with* a release/volatile write on that shared object to see all weaker access writes which happened-before the write the thread observed using only plain read accesses (similar to stress test I wrote)
