@@ -71,7 +71,7 @@ Causal relations also extend to in memory concurrency. From the VarHandle cookbo
 **Happens-before** simply defines a causal order before two events in a system; either in memory or distributed. It's more natural to talk in terms of **happens-before** relationships in Java, as that's what the JMM uses to define legal executions of shared memory accesses across threads.
 
 ## So what is the question?
-The question is quite simple. **Can we create a causal chain using release/acquire which would allow for a thread Z to read a write from a thread X with ever directly observing the write from thread X.**
+The question is quite simple. **Can we create a causal chain using release/acquire which would allow for a thread Z to read a write from a thread X without ever directly observing the write from thread X.**
 
 To answer this question, I decided to come up with a stress test that's pretty easy to reason about.
 
