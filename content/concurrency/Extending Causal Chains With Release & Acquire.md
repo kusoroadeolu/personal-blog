@@ -1,4 +1,4 @@
-# Extending Causal Chains with Release/Acquire
+# Extending Causal Chains with Release & Acquire
 There's been a question that's been on my mind for a while now, but let me rewind a bit. Around 5 months ago, I built my first lock free datastructure a `Treiber Stack`; building one is basically a textbook intro to lock free concurrency. 
 
 ```java
