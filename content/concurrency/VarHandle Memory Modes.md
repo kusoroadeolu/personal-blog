@@ -45,7 +45,7 @@ Usages can be thought of in terms of
 2. Ownership transfer i.e. a thread transfers ownership of an object it will not use again to another thread
 
 ### Fences
-A `VarHandle#releaseFence()` ensures all non-local writes/reads complete before the 
+A `VarHandle#releaseFence()` ensures all non-local writes/reads complete before writes after the fence
 
 A `VarHandle#acquireFence()` ensures all non-local reads complete before the fence and invalidates reads after the fence. Also, if an acquireFence separates two reads, the second read cannot reuse an old value it saw before the fence 
 

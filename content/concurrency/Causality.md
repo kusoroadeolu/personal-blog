@@ -1,5 +1,5 @@
 # Extending Causal Chains with Release & Acquire
-There's been a question that's been on my mind for a while now, but let me rewind a bit. Around 5 months ago, I built my first lock free datastructure a `Treiber Stack`; building one is basically a textbook intro to lock free concurrency. 
+There's been a question that's been on my mind for a while now, but let me rewind a bit. A while back, I built my first lock free datastructure a `Treiber Stack`; building one is basically a textbook intro to lock free concurrency. 
 
 ```java
 //A simple treiber stack
@@ -66,12 +66,10 @@ Causal relations also extend to in-memory concurrency. In Java, from the VarHand
 
 
 ### Happens-before
-Relating to causality, we can look at **happens-before** as a principle which simply defines a causal order before two events in a system; of course though this isn't a formal definition. It's more natural to talk in terms of **happens-before** relationships in Java, as that's what the JMM uses to define legal executions of shared memory accesses across threads.
+Relating to causality, we can look at **happens-before** as a principle which simply defines a causal order before two events in a system; of course though this isn't a formal definition. It's more natural to talk in terms of **happens-before** relationships in Java, as that's what the JMM uses to define legal executions in some primordial soup of interleavings
 
 ## So what is the question?
-The initial question I asked was: **What is the weakest memory accesses we needed to traverse a treiber stack after an acquire/volatile read of the head of the stack**
-
-After some time, I realized the question could be generalized as is: **Can we create a causal chain using release/acquire which would allow for a thread Z to read a write from a thread X without ever directly observing the write from thread X.**
+The question which was bothering me was if a thread Z could observe a write from thread X without ever directly observing a write from thread X
 
 To answer this question, I decided to come up with a stress test that's pretty easy to reason about.
 
@@ -147,17 +145,9 @@ This test succeeds on both x86_64 and ARM systems. Actor Y extends this causal c
  The boring outcomes in this stress test are: Z can *synchronize-with* X's release before it ever has a chance to *synchronize-with* Y's release **OR** Z could neither *synchronize-with* X nor Y
 
 
-This kind of thinking also extends to the treiber stack's push/pop methods **OR** structures where multiple threads create a *synchronizes-with* relation with the last release/volatile write on a shared object from a thread which performed the same action leading to a transitive chain of **happens-before** relationships. This allows a later thread who *synchronizes-with* a release/volatile write on that shared object to see all writes which **happened-before** the release/volatile write that the thread observed, using only plain read accesses (similar to the stress test I wrote)
+This kind of thinking also extends to any structure that only has one entry point, usually linked structures like stacks or trees and maybe sometimes queues. In our example the singular entry point was `ready`.
 
-`A --release/acquire--> B --release/acquire--> C -- acquire`
-
-which gives us
-
-`A -------------happens-before---------------> C`
-
-even though C never directly *synchronizes-with* A
-
-## Thoughts?
-
-
+## The end?
 Yeah, this was just a mini experiment I decided to write up as it isn't quite intuitive at first. 
+
+

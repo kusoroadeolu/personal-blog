@@ -7,6 +7,7 @@ Welcome to my personal blog/knowledge base. This contains everything I will writ
 
 ## Topics
 - [[concurrency/Cache Coherence|An Intro To Cache Coherence]]
+- [[concurrency/Relay Lock|Relaying wakeups in fair locks]]
 - [[concurrency/VarHandle Memory Modes|VarHandle Memory Modes]]
 - [[concurrency/Elimination Backoff Stack|Elimination Backoff Stack]]
 - [[transactional-map/MVCC Optimization]]

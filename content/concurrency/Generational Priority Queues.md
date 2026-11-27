@@ -17,7 +17,7 @@ which in turn could become a bottleneck later down the line.
 
 This ruled out any concurrency control technique in which all threads had to come to consensus on the size of the queue through a shared counter. For example, per node fine-grained locking or segmentation, where both insert and delete operations need a serialized view of the size of the queue before proceeding.
 
-Eventually I landed on what I believed was a simple way to enforce boundedness. It had a major flaw I didn't realize at the moment, though.
+Eventually I landed on what I believed was a simple way to enforce boundedness. It had a major flaw I didn't realize at the moment.
 
 ### Dual arrays
 
@@ -27,7 +27,7 @@ The insert array is a single fixed capacity array. In itself, the insert array a
 
 However, the delete array is an immutable & growable (up to a bound) array which coordinates delete operations and allows deleting threads to proceed without interfering with insert threads (up till a merge operation). 
 
-It uses `CAS` or `FAA` semantics to allow threads to claim indices in the delete array before actual deletion.
+It uses fetch and add semantics to allow threads to claim indices in the delete array before actual deletion.
 
 In the case of the delete array being empty, when the delete index >= delete array capacity, a merge is required.
 

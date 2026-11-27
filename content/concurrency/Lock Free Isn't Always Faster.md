@@ -25,9 +25,9 @@ If lock-free avoids locking overhead entirely, how does a structure that *still 
 
 The lock-free linked list suffers from pointer chasing. This is a classic problem with linked structures, where finding a value means hopping from node to node, each one potentially scattered somewhere different in memory.
 
-The unrolled list sidesteps this. Because it stores elements in contiguous arrays, it leans on **spatial locality**; the principle that if a CPU core accesses one memory location, it's very likely to access nearby locations next. Modern memory systems fetch data in 64-byte cache lines, and arrays are laid out exactly to exploit that: when the CPU pulls one element from an array, it usually pulls the neighboring elements too, straight into L1 or L2 cache. Cache access is fast. Main memory access is not. (I go deeper on this in my Cache Coherence article)
+The unrolled list sidesteps this. Because it stores elements in contiguous arrays, it leans on **spatial locality**; the principle that if a CPU core accesses one memory location, it's very likely to access nearby locations next. Modern memory systems fetch data in 64-byte cache lines, and arrays are laid out exactly to exploit that: when the CPU pulls one element from an array, it usually pulls the neighboring elements too, straight into L1 or L2 cache. Cache access is fast. Main memory access is not. 
 
-This is the idea Martin Thompson calls **mechanical sympathy**; designing software that works with the hardware's grain instead of against it.
+This is the idea Martin Thompson calls **mechanical sympathy**; designing software that works with the hardware instead of against it.
 
 Back to the benchmark, just to make things concrete
 
@@ -57,6 +57,6 @@ This shows that progress guarantees don't automatically guarantee performace. Ho
 
 ## Conclusions
 
-"Lock-free" and "fast" aren't the same thing. A structure can give you perfect non-blocking guarantees and still lose badly to a lock-based structure that simply respects how the CPU fetches memory. If you're chasing performance, designing around modern hardware will often get you further than designing around avoiding locks.
+"Lock-free" and "fast" aren't the same thing. A structure can give you perfect non-blocking guarantees and still lose badly to a lock-based structure that simply respects how the CPU fetches memory. Most times designing around modern hardware will often get you further than designing around avoiding locks.
 
 Source code for both structures is on my GitHub: https://github.com/kusoroadeolu/concurrent-lists
