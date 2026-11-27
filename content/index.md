@@ -1,19 +1,15 @@
 ---
-title: ""
+title: "My Blog"
 ---
 
 # My Blog
 Welcome to my personal blog/knowledge base. This contains everything I will write from full articles to rough sketches. Note that not everything written here will be completed content
 
-## Topics
+## Some Topics
 - [[concurrency/Cache Coherence|An Intro To Cache Coherence]]
 - [[concurrency/Relay Lock|Relaying wakeups in fair locks]]
 - [[concurrency/VarHandle Memory Modes|VarHandle Memory Modes]]
-- [[concurrency/Elimination Backoff Stack|Elimination Backoff Stack]]
-- [[transactional-map/MVCC Optimization]]
-- [[transactional-map/Transactional Map Implementations]]
 - [[transactional-map/Transactional Map WriteUp]]
-- [[concurrency/Lock Free Isn't Always Faster]]
 - [[concurrency/Generational Priority Queues]]
 - [[concurrency/Causality|Extending Causal Chains With Release & Acquire]]
 
