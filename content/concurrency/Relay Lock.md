@@ -25,8 +25,8 @@ However, having every waiting thread spin on `nowServing` would mean they all ob
 
 This is where the ordered wait list comes in. In short, it maps threads who fall outside the spin window to their tickets. It then allows the previous lock holder to find a waiter mapped to a ticket.
 
-Visually, both structures together would look something like this.
-![Relay Lock Image](./images/relay-lock.png)
+Together, both structures would look something like this.
+![Relay Lock Image](../images/relay-lock.png)
 
 
 

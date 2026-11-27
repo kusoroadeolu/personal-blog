@@ -3,7 +3,7 @@ title: "My Blog"
 ---
 
 # My Blog
-Welcome to my personal blog/knowledge base. This contains everything I will write from full articles to rough sketches. Note that not everything written here will be completed content
+Welcome to my personal blog. This contains mostly everything I will write from full articles to rough sketches. Note that not everything written here will be completed content
 
 ## Some Topics
 - [[concurrency/Cache Coherence|An Intro To Cache Coherence]]
