@@ -12,18 +12,23 @@ The idea is pretty simple. If I know which thread is going to acquire the lock s
 
 
 ## How does it work?
-To start with, there are three pieces to `RelayLock`: tickets, a spin array, and an ordered wait list.
+To start with, there are three pieces to `RelayLock`: a ticket lock, a spin array, and a concurrent ordered wait list.
 
-Tickets provide a simple way for the lock to maintain fifo ordering between threads. 
-A ticket based design in its simplest form contains two variables, `ticket` and `nowServing`, where `nowServing` allows threads to identify the ticket entitled to acquire the lock. 
+A ticket lock maintains FIFO order and mutual exclusion using two variables: `ticket` and `nowServing`. Threads atomically claim a ticket when they arrive and wait until `nowServing` matches their ticket.
 
-However, having every waiting thread spin on `nowServing` would mean they all observe the same memory location being updated on every handoff, even when they're nowhere near acquiring the lock. Instead, the spin array gives each thread a slot associated with its ticket to spin on, so only the thread being handed the lock needs to observe a change.
+There's one problem here though: everyone spins on `nowServing`.
+
+This means every handoff invalidates the same cache line, even for threads that are nowhere near acquiring the lock, creating unneccessary memory traffic.
+
+The spin array avoids this by giving each thread, determined by its ticket, its own slot to spin on. Now, a handoff only needs to update the slot belonging to the next thread, rather than making every waiter spin on the same shared variable.
 
 ---
 
 **So what about threads whose tickets fall outside the spin window?** 
 
-This is where the ordered wait list comes in. In short, it maps threads who fall outside the spin window to their tickets. It then allows the previous lock holder to find a waiter mapped to a ticket.
+This is where the ordered wait list comes in. It keeps track of threads outside the spin window and their corresponding tickets, allowing the previous lock holder to find a waiter mapped to a ticket after.
+
+I used a variant of the Harris-Michael linked list for this. Though it doesn't have to be a linked list; a concurrent hashmap would work as well.
 
 Together, both structures would look something like this.
 ![Relay Lock Image](../images/relay-lock.png)
