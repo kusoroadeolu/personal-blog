@@ -33,7 +33,7 @@ In the case of the delete array being empty, when the delete index >= delete arr
 
 A merge is essentially a stop the world operation, for both insert and delete threads, which is serialized through a single thread. A merge sorts the whole insert array for FIFO based arrays and then drains the N highest priority values from the insert array into a new delete array. A merge can also be triggered in the scenario that an element with a higher priority than the lowest priority element in the delete array is to be inserted into the insert array.
 
-![Dual Array Image](images/dual-array.png)
+![Dual Array Image](./images/dual-array.png)
 
 Boundedness is preserved by summing the count of the current values in the insert array and the remaining values in the delete array before any operation is performed.
 
@@ -64,7 +64,7 @@ A new generation begins once a previous generation has been sorted OR the range 
 
 To guard against false sharing, I added manual cache line padding to the generational queues, separating fields that are updated independently by different threads (e.g. producer/consumer indices, sort buffers, status flags etc.) onto their own cache lines. I didn't bother with this in the dual-array structures tbh. The cost of this however, is a larger memory footprint, which might not be suitable depending on a system's constraints.
 
-![Generation Array](images/generation-array.png)
+![Generation Array](./images/generation-array.png)
 
 ## Benchmarks
 

@@ -38,7 +38,7 @@ Informally, coherence protocols ensure writes from one core are made visible to 
 1. Consistency Agnostic Coherence: These protocols propagate writes synchronously to all cores, meaning they ensure writes are visible before they return. This basically give an abstraction of an atomic memory system. They also aren't dependent on the memory consistency model to ensure the visibility of writes to other cores
 2. Consistency Directed Coherence: These protocols propage writes asynchronously to all cores, meaning a they do not wait for writes to be visible to other cores before returning, allowing for stale values to be read. To enforce consistency, the order in which writes are made visible to other cores is governed by the memory consistency model of the system.
 
-![Coherence Image](images/coherence-img.png)
+![Coherence Image](./images/coherence-img.png)
 
 However, for this writeup, I will only be focusing on **Consitency Agnostic Coherence**
 
