@@ -7,7 +7,7 @@ Welcome to my personal blog. This contains mostly everything I will write from f
 
 ## Some Topics
 - [[concurrency/Cache Coherence|An Intro To Cache Coherence]]
-- [[concurrency/Relaying wakeups in fair locks|Relaying wakeups in fair locks]]
+- [[concurrency/Relay Lock|Relaying wakeups in fair locks]]
 - [[concurrency/VarHandle Memory Modes|VarHandle Memory Modes]]
 - [[transactional-map/Transactional Map WriteUp]]
 - [[concurrency/Generational Priority Queues]]
