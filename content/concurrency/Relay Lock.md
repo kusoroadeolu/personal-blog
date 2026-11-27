@@ -109,7 +109,9 @@ I wrote a benchmark in JMH consisting of a short and medium sized critical secti
 
 Going in, I expected the performance of `RelayLock` would depend on two things: the cost of the critical section and the length of the spin array.
 
-My reasoning was that the longer the spin window, the more time a thread has to get scheduled before it's actually supposed to acquire the lock. So I expected `RelayLock` to perform similarly to a traditional fair lock when the time spent processing the threads in the spin window was roughly equal to the time needed for the OS to schedule a thread back onto the CPU.
+My reasoning was that the longer the spin window, the more time a thread has to get scheduled before it's actually supposed to acquire the lock. 
+
+So I expected `RelayLock` to perform similarly to a traditional fair lock when the time needed to execute the critical section multiplied by the threads in the spin window was roughly less than the time needed for the OS to schedule a thread back onto the CPU.
 
 However, `RelayLock` performed considerably better than both baselines in both benchmarks, even when the spin window wasn't large enough to cover the scheduler overhead.
 
@@ -117,9 +119,9 @@ The difference between `RelayLock` and `BaselineRelayLock`was particularly notic
 
 The cost of the critical section also didn't have as much impact as I expected. Both benchmarks behaved pretty similarly, with scheduler overhead still dominating the time spent waiting for the lock.
 
-Apparently, looks like my initial hypothesis was wrong and you don't actually need a relatively large spin window to get a benefit from relaying wakeups (relative to my baseline). At least for these workloads, a relatively small spin window was enough to outperform both baselines.
+So, my initial hypothesis was pretty much wrong and you don't actually need a relatively large spin window to get a benefit from relaying wakeups (relative to my baseline). At least for these workloads, a relatively small spin window was enough to outperform both baselines.
 
-So, `RelayLock` ended up performing much better than I expected, but there are still some downsides. Though depends if you consider them downsides.
+`RelayLock` ended up performing much better than I expected, but there are still some downsides. Though depends if you consider them downsides.
 
 First, we're waking threads that aren't necessarily going to acquire the lock immediately. We're moving some of the scheduling overhead out of the handoff path, but that also means having threads become runnable way before they are actually doing anything useful. Plus, threads in the spin array also never park, so they can end up  burning CPU while waiting for their turn. Depending on the workload, particularly when oversubscription is common, these can become footguns.
 
