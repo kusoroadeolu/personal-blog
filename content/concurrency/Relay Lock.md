@@ -105,7 +105,7 @@ That's the whole algorithm.
 
 ## How does it perform?
 
-I wrote a benchmark in JMH consisting of a short and medium sized critical section to compare `RelayLock` against the JDK's fair `ReentrantLock`, which is a custom CLH lock. I also included a BaselineRelayLock as a control implementation, which removes the wake ahead aspect of `RelayLock`.
+I wrote a benchmark in JMH consisting of a short and medium sized critical section to compare `RelayLock` against the JDK's fair `ReentrantLock`, which is a variant of the CLH lock. I also included a BaselineRelayLock as a control implementation, which removes the wake ahead aspect of `RelayLock`.
 
 Going in, I expected the performance of `RelayLock` would depend on two things: the cost of the critical section and the length of the spin array.
 
@@ -123,7 +123,7 @@ So, `RelayLock` ended up performing much better than I expected, but there are s
 
 First, we're waking threads that aren't necessarily going to acquire the lock immediately. We're moving some of the scheduling overhead out of the handoff path, but that also means having threads become runnable way before they are actually doing anything useful. Plus, threads in the spin array also never park, so they can end up  burning CPU while waiting for their turn. Depending on the workload, particularly when oversubscription is common, these can become footguns.
 
-`RelayLock` is definitely not a better general-purpose lock than `ReentrantLock`. But if fairness matters and a lock is the right primitive for the job, `RelayLock` is definitely an interesting alternative.
+`RelayLock` is definitely not a better general-purpose lock than `ReentrantLock`. But if fairness matters and a lock is the right primitive for the job, `RelayLock` is probably an interesting alternative.
 
 ## The end?
 Finally, if you're interested in the actual implementation or just want to check the benchmarks, you can check that out [here](https://github.com/kusoroadeolu/locks)
