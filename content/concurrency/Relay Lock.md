@@ -118,7 +118,7 @@ So, `RelayLock` ended up performing much better than I expected, but there are s
 
 First, we're waking threads that aren't necessarily going to acquire the lock immediately. We're moving some of the scheduling overhead out of the handoff path, but that also means having threads become runnable way before they are actually doing anything useful. Plus, threads in the spin array also never park, so they can end up  burning CPU while waiting for their turn. Depending on the workload, particularly when oversubscription is common, these can become footguns.
 
-`RelayLock` is definitely not a better general-purpose lock than `ReentrantLock`. But if fairness matters, scheduler overhead makes up a significant part of lock handoff, and a lock is still the right primitive for the job, relaying wakeups ahead of time (pun intended) is an interesting alternative.
+`RelayLock` is definitely not a better general-purpose lock than `ReentrantLock`. But if fairness matters and a lock is the right primitive for the job, `RelayLock` is definitely an interesting alternative.
 
 ## The end?
 Finally, if you're interested in the actual implementation or just want to check the benchmarks, you can check that out [here](https://github.com/kusoroadeolu/locks)
