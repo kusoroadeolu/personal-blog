@@ -97,7 +97,6 @@ if (waiter != null) unpark(waiter);
 ```
 
 That's the whole algorithm. 
-Also, notice that the thread being unparked doesn't necessarily acquire the lock next. We only try to get it running ahead of time.
 
 ## How does it perform?
 
@@ -109,7 +108,7 @@ My reasoning was that the longer the spin window, the more time a thread has to 
 
 However, `RelayLock` performed considerably better than both baselines in both benchmarks, even when the spin window wasn't large enough to cover the scheduler overhead.
 
-The difference between `RelayLock` and `BaselineRelayLock`was particularly noticeable. This part actually matters a lot since it shows that simply relaying wakeups ahead of time seems to make a substantial difference, even without a particularly large lookahead window.
+The difference between `RelayLock` and `BaselineRelayLock`was particularly noticeable. This actually matters a lot since it shows that simply relaying wakeups ahead of time makes a substantial difference, even without a particularly large lookahead window.
 
 The cost of the critical section also didn't have as much impact as I expected. Both benchmarks behaved pretty similarly, with scheduler overhead still dominating the time spent waiting for the lock.
 
